@@ -153,11 +153,11 @@ public class ImageCompressor {
 
             case 5: // SSIM
                 //SSIM constants
-                final double K1 = 0.01; 
-                final double K2 = 0.03;
-                final int L = 255; 
-                final double C1 = Math.pow(K1 * L, 2);
-                final double C2 = Math.pow(K2 * L, 2);
+                double K1 = 0.01; 
+                double K2 = 0.03;
+                int L = 255; 
+                double C1 = Math.pow(K1 * L, 2);
+                double C2 = Math.pow(K2 * L, 2);
 
                 double muX = 0, muY = 0;
                 List<Double> orig = new ArrayList<>();
