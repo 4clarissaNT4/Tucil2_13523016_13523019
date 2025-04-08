@@ -152,8 +152,38 @@ public class ImageCompressor {
                 return (entropyR + entropyG + entropyB) / 3.0;
 
             case 5: // SSIM
-                
-                return 0;
+                //SSIM constants
+                final double K1 = 0.01; 
+                final double K2 = 0.03;
+                final int L = 255; 
+                final double C1 = Math.pow(K1 * L, 2);
+                final double C2 = Math.pow(K2 * L, 2);
+
+                double muX = 0, muY = 0;
+                List<Double> orig = new ArrayList<>();
+                for (int i = y; i < y + pixelHeight; i++) {
+                    for (int j = x; j < x + pixelWidth; j++) {
+                        Color c = new Color(img.getRGB(j, i));
+                        double gray = c.getRed() * 0.299 + c.getGreen() * 0.587 + c.getBlue() * 0.114; 
+                        orig.add(gray);
+                        muX += gray;
+                    }
+                }
+                muX /= pixelCount;
+                Color avg = getAverageColor(img, x, y, pixelWidth, pixelHeight);
+                double avgGray = avg.getRed() * 0.299 + avg.getGreen() * 0.587 + avg.getBlue() * 0.114;
+                muY = avgGray; 
+                double sigmaX2 = 0, sigmaY2 = 0, sigmaXY = 0;
+                for (double xValue : orig) {
+                    sigmaX2 += Math.pow(xValue - muX, 2);
+                    sigmaY2 += Math.pow(avgGray - muY, 2);
+                    sigmaXY += (xValue - muX) * (avgGray - muY);
+                }
+                sigmaX2 /= pixelCount;
+                sigmaY2 /= pixelCount;
+                sigmaXY /= pixelCount;
+                double ssim = ((2 * muX * muY + C1) * (2 * sigmaXY + C2)) / ((muX * muX + muY * muY + C1) * (sigmaX2 + sigmaY2 + C2));
+                return 1 - ssim; 
 
             default:
                 return 0;
