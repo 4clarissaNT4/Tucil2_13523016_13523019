@@ -129,8 +129,27 @@ public class ImageCompressor {
                 return maxDiff;
 
             case 4: // Entropy
-                
-                return 0;
+                int[] freqR = new int[256];
+                int[] freqG = new int[256];
+                int[] freqB = new int[256];
+                for (int i = y; i < y + pixelHeight; i++) {
+                    for (int j = x; j < x + pixelWidth; j++) {
+                        Color c = new Color(img.getRGB(j, i));
+                        freqR[c.getRed()]++;
+                        freqG[c.getGreen()]++;
+                        freqB[c.getBlue()]++;
+                    }
+                }
+                double entropyR = 0.0, entropyG = 0.0, entropyB = 0.0;
+                for (int i = 0; i < 256; i++) {
+                    double pR = freqR[i] / (double) pixelCount;
+                    double pG = freqG[i] / (double) pixelCount;
+                    double pB = freqB[i] / (double) pixelCount;
+                    if (pR > 0) entropyR -= pR * (Math.log(pR) / Math.log(2));
+                    if (pG > 0) entropyG -= pG * (Math.log(pG) / Math.log(2));
+                    if (pB > 0) entropyB -= pB * (Math.log(pB) / Math.log(2));
+                }
+                return (entropyR + entropyG + entropyB) / 3.0;
 
             case 5: // SSIM
                 
