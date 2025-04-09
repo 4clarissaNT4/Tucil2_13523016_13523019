@@ -21,6 +21,7 @@ public class GIFGenerator {
                 writer.writeToSequence(frame);
             }
             writer.close();
+            output.close();
         }
     }
 }

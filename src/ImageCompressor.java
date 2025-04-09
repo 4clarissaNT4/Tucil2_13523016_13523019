@@ -74,7 +74,8 @@ public class ImageCompressor {
         node.children[1] = buildQuadTree(img, x + midW, y, width - midW, midH, threshold, errorMethod, minSize, depth + 1);
         node.children[2] = buildQuadTree(img, x, y + midH, midW, height - midH, threshold, errorMethod, minSize, depth + 1);
         node.children[3] = buildQuadTree(img, x + midW, y + midH, width - midW, height - midH, threshold, errorMethod, minSize, depth + 1);
-
+        //menambah gifframes
+        drawBlockFrame(img.getWidth(), img.getHeight(), node);
         return node;
     }
 

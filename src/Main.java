@@ -26,9 +26,14 @@ public class Main {
         } catch (IOException e) {
             System.err.println("Terjadi kesalahan: " + e.getMessage());
         }
-
+        
+        try {
+            GIFGenerator.saveGif(ImageCompressor.getGifFrames(), input.gifPath);
+        } catch (IOException e) {
+            System.err.println("Terjadi kesalahan saat menyimpan GIF: " + e.getMessage());
+        }
         long end = System.nanoTime();
-
+        
         Output.printStats(
             start,
             end,
