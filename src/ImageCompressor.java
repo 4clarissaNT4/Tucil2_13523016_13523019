@@ -23,14 +23,12 @@ public class ImageCompressor {
 
     private static int nodeCount = 0;
     private static int maxDepth = 0;
-    private static final List<BufferedImage> gifFrames = new ArrayList<>();
     private static final int FRAME_INTERVAL = 100;
     private static int frameCounter = 0;
 
     public static QuadTreeNode compress(BufferedImage image, int errorMethod, double threshold, int minBlockSize) {
         nodeCount = 0;
         maxDepth = 0;
-        gifFrames.clear();
         return buildQuadTree(image, 0, 0, image.getWidth(), image.getHeight(), threshold, errorMethod, minBlockSize, 0);
     }
 
@@ -40,10 +38,6 @@ public class ImageCompressor {
         renderNode(g, root);
         g.dispose();
         return img;
-    }
-
-    public static List<BufferedImage> getGifFrames() {
-        return gifFrames;
     }
 
     public static int getNodeCount() {
@@ -228,6 +222,5 @@ public class ImageCompressor {
         g.setColor(Color.BLACK);
         g.drawRect(node.x, node.y, node.width, node.height);
         g.dispose();
-        gifFrames.add(frame);
     }
 }
