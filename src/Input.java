@@ -20,8 +20,10 @@ public class Input {
             valid = true;
             List<String> errors = new ArrayList<>();
 
-            System.out.print("Masukkan path gambar input: "); // pathnya tanpa tanda petik dua
+            System.out.print("Masukkan path gambar (absolut) input: "); // pathnya tanpa tanda petik dua
             inputPath = scanner.nextLine();
+
+            System.out.println("");
 
             System.out.println("Pilihan Metode Error:");
             System.out.println("1. Variance");
@@ -29,19 +31,25 @@ public class Input {
             System.out.println("3. Max Pixel Difference");
             System.out.println("4. Entropy");
             System.out.println("5. Structural Similarity Index Measure (SSIM)");
-            System.out.println("Masukkan pilihan (1/2/3/4/5(opt)): ");
+            System.out.println("Masukkan pilihan (1/2/3/4/5): ");
             try {
                 errorMethod = Integer.parseInt(scanner.nextLine());
             } catch (NumberFormatException e) {
                 errorMethod = -1;
             }
 
+            System.out.println("");
+
+            System.out.println("Untuk pilihan metode 1, 4, dan 5, threshold harus antara 0 dan 1.");
+            System.out.println("Untuk pilihan metode 2 dan 3, threshold harus antara 0 dan 255.");
             System.out.print("Masukkan threshold: ");
             try {
                 threshold = Float.parseFloat(scanner.nextLine());
             } catch (NumberFormatException e) {
                 threshold = -1;
             }
+
+            System.out.println("");
 
             System.out.print("Masukkan ukuran blok minimum: ");
             try {
@@ -50,6 +58,8 @@ public class Input {
                 minBlockSize = -1;
             }
 
+            System.out.println("");
+
             System.out.print("Masukkan target kompresi (0-1): ");
             try {
                 targetCompression = Float.parseFloat(scanner.nextLine());
@@ -57,12 +67,18 @@ public class Input {
                 targetCompression = -1;
             }
 
-            System.out.print("Masukkan path gambar output: "); // pathnya tanpa tanda petik dua
+            System.out.println("");
+
+            System.out.print("Masukkan path gambar (absolut) output: "); // pathnya tanpa tanda petik dua
             outputPath = scanner.nextLine();
 
-            System.out.print("Masukkan path GIF output: "); // pathnya tanpa tanda petik dua
+            System.out.println("");
+
+            System.out.print("Masukkan path GIF (absolut) output: "); // pathnya tanpa tanda petik dua
             gifPath = scanner.nextLine();
 
+            System.out.println("");
+            
             if (inputPath.isEmpty()) {
                 valid = false;
                 errors.add("Path input tidak boleh kosong.");

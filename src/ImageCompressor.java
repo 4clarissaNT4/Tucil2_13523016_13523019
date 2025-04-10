@@ -23,14 +23,29 @@ public class ImageCompressor {
 
     private static int nodeCount = 0;
     private static int maxDepth = 0;
-    private static final int FRAME_INTERVAL = 100;
-    private static int frameCounter = 0;
+    private static final List<BufferedImage> gifFrames = new ArrayList<>();
+    private static final List<List<QuadTreeNode>> depthLevels = new ArrayList<>();
 
-    public static QuadTreeNode compress(BufferedImage image, int errorMethod, double threshold, int minBlockSize) {
+    public static QuadTreeNode compress(BufferedImage image, int errorMethod, float threshold, int minBlockSize) {
         nodeCount = 0;
         maxDepth = 0;
-        return buildQuadTree(image, 0, 0, image.getWidth(), image.getHeight(), threshold, errorMethod, minBlockSize, 0);
-    }
+        gifFrames.clear();
+        depthLevels.clear();
+    
+        QuadTreeNode root = new QuadTreeNode(0, 0, image.getWidth(), image.getHeight());
+        buildQuadTree(image, 0, 0, image.getWidth(), image.getHeight(), threshold, errorMethod, minBlockSize, 0, root, root);
+    
+        for (int depth = 0; depth < depthLevels.size(); depth++) {
+            BufferedImage frame = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+            Graphics2D g = frame.createGraphics();
+            renderByDepth(g, root, depth);
+            g.dispose();
+            gifFrames.add(frame);
+        }
+    
+        gifFrames.add(image);
+        return root;
+    }    
 
     public static BufferedImage render(QuadTreeNode root, int width, int height) {
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -38,6 +53,10 @@ public class ImageCompressor {
         renderNode(g, root);
         g.dispose();
         return img;
+    }
+
+    public static List<BufferedImage> getGifFrames() {
+        return gifFrames;
     }
 
     public static int getNodeCount() {
@@ -49,10 +68,13 @@ public class ImageCompressor {
     }
 
     private static QuadTreeNode buildQuadTree(BufferedImage img, int x, int y, int width, int height,
-                                              double threshold, int errorMethod, int minSize, int depth) {
-        QuadTreeNode node = new QuadTreeNode(x, y, width, height);
+        float threshold, int errorMethod, int minSize, int depth,
+        QuadTreeNode node, QuadTreeNode root) {
         nodeCount++;
         maxDepth = Math.max(maxDepth, depth);
+
+        while (depthLevels.size() <= depth) depthLevels.add(new ArrayList<>());
+        depthLevels.get(depth).add(node);
 
         if ((width <= minSize && height <= minSize) || getError(img, x, y, width, height, errorMethod) <= threshold) {
             node.isLeaf = true;
@@ -63,11 +85,56 @@ public class ImageCompressor {
         int midW = width / 2;
         int midH = height / 2;
 
-        node.children[0] = buildQuadTree(img, x, y, midW, midH, threshold, errorMethod, minSize, depth + 1);
-        node.children[1] = buildQuadTree(img, x + midW, y, width - midW, midH, threshold, errorMethod, minSize, depth + 1);
-        node.children[2] = buildQuadTree(img, x, y + midH, midW, height - midH, threshold, errorMethod, minSize, depth + 1);
-        node.children[3] = buildQuadTree(img, x + midW, y + midH, width - midW, height - midH, threshold, errorMethod, minSize, depth + 1);
+        node.children[0] = buildQuadTree(img, x, y, midW, midH, threshold, errorMethod, minSize, depth + 1, new QuadTreeNode(x, y, midW, midH), root);
+        node.children[1] = buildQuadTree(img, x + midW, y, width - midW, midH, threshold, errorMethod, minSize, depth + 1, new QuadTreeNode(x + midW, y, width - midW, midH), root);
+        node.children[2] = buildQuadTree(img, x, y + midH, midW, height - midH, threshold, errorMethod, minSize, depth + 1, new QuadTreeNode(x, y + midH, midW, height - midH), root);
+        node.children[3] = buildQuadTree(img, x + midW, y + midH, width - midW, height - midH, threshold, errorMethod, minSize, depth + 1, new QuadTreeNode(x + midW, y + midH, width - midW, height - midH), root);
+
         return node;
+    }
+
+    private static void renderByDepth(Graphics2D g, QuadTreeNode node, int maxRenderDepth) {
+        renderByDepthHelper(g, node, 0, maxRenderDepth);
+    }
+    
+    private static void renderByDepthHelper(Graphics2D g, QuadTreeNode node, int currentDepth, int maxDepth) {
+        if (node == null) return;
+        
+        if (currentDepth == maxDepth || node.isLeaf) {
+            g.setColor(node.color != null ? node.color : Color.BLACK);
+            g.fillRect(node.x, node.y, node.width, node.height);
+        } else {
+            for (QuadTreeNode child : node.children) {
+                renderByDepthHelper(g, child, currentDepth + 1, maxDepth);
+            }
+        }
+    }
+        
+
+    private static void renderNode(Graphics2D g, QuadTreeNode node) {
+        if (node.isLeaf) {
+            g.setColor(node.color);
+            g.fillRect(node.x, node.y, node.width, node.height);
+        } else {
+            for (QuadTreeNode child : node.children) {
+                if (child != null) renderNode(g, child);
+            }
+        }
+    }
+
+    private static Color getAverageColor(BufferedImage img, int x, int y, int width, int height) {
+        long r = 0, g = 0, b = 0;
+        int count = 0;
+        for (int i = y; i < y + height && i < img.getHeight(); i++) {
+            for (int j = x; j < x + width && j < img.getWidth(); j++) {
+                Color c = new Color(img.getRGB(j, i));
+                r += c.getRed();
+                g += c.getGreen();
+                b += c.getBlue();
+                count++;
+            }
+        }
+        return new Color((int) (r / count), (int) (g / count), (int) (b / count));
     }
 
     private static double getError(BufferedImage img, int x, int y, int width, int height, int method) {
@@ -94,20 +161,18 @@ public class ImageCompressor {
         double meanB = sumB / pixelCount;
 
         switch (method) {
-            case 1: // Variance
+            case 1:
                 double varR = (sumSqR / pixelCount) - (meanR * meanR);
                 double varG = (sumSqG / pixelCount) - (meanG * meanG);
                 double varB = (sumSqB / pixelCount) - (meanB * meanB);
                 return (varR + varG + varB) / 3.0;
-
-            case 2: // Mean Absolute Deviation (MAD)
+            case 2:
                 double mad = 0.0;
                 for (int i = 0; i < pixelCount; i++) {
                     mad += Math.abs(diffR.get(i) - meanR) + Math.abs(diffG.get(i) - meanG) + Math.abs(diffB.get(i) - meanB);
                 }
                 return mad / (3.0 * pixelCount);
-
-            case 3: // Max Pixel Difference
+            case 3:
                 int maxDiff = 0;
                 for (int i = y; i < y + pixelHeight; i++) {
                     for (int j = x; j < x + pixelWidth; j++) {
@@ -119,8 +184,7 @@ public class ImageCompressor {
                     }
                 }
                 return maxDiff;
-
-            case 4: // Entropy
+            case 4:
                 int[] freqR = new int[256];
                 int[] freqG = new int[256];
                 int[] freqB = new int[256];
@@ -142,9 +206,7 @@ public class ImageCompressor {
                     if (pB > 0) entropyB -= pB * (Math.log(pB) / Math.log(2));
                 }
                 return (entropyR + entropyG + entropyB) / 3.0;
-
-            case 5: // SSIM
-                //SSIM constants
+            case 5:
                 double K1 = 0.01; 
                 double K2 = 0.03;
                 int L = 255; 
@@ -176,35 +238,18 @@ public class ImageCompressor {
                 sigmaXY /= pixelCount;
                 double ssim = ((2 * muX * muY + C1) * (2 * sigmaXY + C2)) / ((muX * muX + muY * muY + C1) * (sigmaX2 + sigmaY2 + C2));
                 return 1 - ssim; 
-
             default:
                 return 0;
         }
     }
 
-    private static Color getAverageColor(BufferedImage img, int x, int y, int width, int height) {
-        long r = 0, g = 0, b = 0;
-        int count = 0;
-        for (int i = y; i < y + height && i < img.getHeight(); i++) {
-            for (int j = x; j < x + width && j < img.getWidth(); j++) {
-                Color c = new Color(img.getRGB(j, i));
-                r += c.getRed();
-                g += c.getGreen();
-                b += c.getBlue();
-                count++;
+    public static boolean imagesEqual(BufferedImage img1, BufferedImage img2) {
+        if (img1.getWidth() != img2.getWidth() || img1.getHeight() != img2.getHeight()) return false;
+        for (int y = 0; y < img1.getHeight(); y++) {
+            for (int x = 0; x < img1.getWidth(); x++) {
+                if (img1.getRGB(x, y) != img2.getRGB(x, y)) return false;
             }
         }
-        return new Color((int) (r / count), (int) (g / count), (int) (b / count));
-    }
-
-    private static void renderNode(Graphics2D g, QuadTreeNode node) {
-        if (node.isLeaf) {
-            g.setColor(node.color);
-            g.fillRect(node.x, node.y, node.width, node.height);
-        } else {
-            for (QuadTreeNode child : node.children) {
-                if (child != null) renderNode(g, child);
-            }
-        }
+        return true;
     }
 }

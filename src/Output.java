@@ -16,6 +16,7 @@ public class Output {
 
         System.out.println("Kedalaman pohon: " + depth);
         System.out.println("Jumlah simpul: " + nodeCount);
+        System.out.println("");
         System.out.println("Gambar hasil kompresi disimpan di: " + input.outputPath);
         System.out.println("GIF hasil kompresi disimpan di: " + input.gifPath);
     }
