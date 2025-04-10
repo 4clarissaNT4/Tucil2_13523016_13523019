@@ -57,7 +57,6 @@ public class ImageCompressor {
         if ((width <= minSize && height <= minSize) || getError(img, x, y, width, height, errorMethod) <= threshold) {
             node.isLeaf = true;
             node.color = getAverageColor(img, x, y, width, height);
-            drawBlockFrame(img.getWidth(), img.getHeight(), node);
             return node;
         }
 
@@ -68,8 +67,6 @@ public class ImageCompressor {
         node.children[1] = buildQuadTree(img, x + midW, y, width - midW, midH, threshold, errorMethod, minSize, depth + 1);
         node.children[2] = buildQuadTree(img, x, y + midH, midW, height - midH, threshold, errorMethod, minSize, depth + 1);
         node.children[3] = buildQuadTree(img, x + midW, y + midH, width - midW, height - midH, threshold, errorMethod, minSize, depth + 1);
-        //menambah gifframes
-        drawBlockFrame(img.getWidth(), img.getHeight(), node);
         return node;
     }
 
@@ -209,18 +206,5 @@ public class ImageCompressor {
                 if (child != null) renderNode(g, child);
             }
         }
-    }
-
-    private static void drawBlockFrame(int width, int height, QuadTreeNode node) {
-        frameCounter++;
-        if (frameCounter % FRAME_INTERVAL != 0) return;
-
-        BufferedImage frame = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = frame.createGraphics();
-        g.setColor(node.color);
-        g.fillRect(node.x, node.y, node.width, node.height);
-        g.setColor(Color.BLACK);
-        g.drawRect(node.x, node.y, node.width, node.height);
-        g.dispose();
     }
 }
