@@ -30,12 +30,12 @@ Algoritma Divide and Conquer adalah pendekatan pemecahan masalah dengan membagi 
 - Clone repositori ini dengan cara mengetik ini di terminal:
 ```shell
 git clone https://github.com/4clarissaNT4/Tucil2_13523016_13523019.git
-'''
+```
 
 - Navigasi ke repositori yang sudah di-clone, lalu arahkan ke folder source codenya:
 ```shell
 cd src
-'''
+```
 
 - Lakukan proses kompilasi dengan mengetik kode berikut pada terminal:
 ```shell
