@@ -26,7 +26,7 @@ Algoritma Divide and Conquer adalah pendekatan pemecahan masalah dengan membagi 
 ## Tech Stack
 - Java
 
-## Get Started
+## Cara Menjalankan Program
 - Clone repositori ini dengan cara mengetik ini di terminal:
 ```shell
 git clone https://github.com/4clarissaNT4/Tucil2_13523016_13523019.git
