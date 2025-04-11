@@ -40,10 +40,9 @@ cd src
 - Lakukan proses kompilasi dengan mengetik kode berikut pada terminal:
 ```shell
 javac -d ../bin Main.java
-java -cp ../bin Main
 ```
 
 - Setelah itu cara menjalankan program untuk siap menerima input yaitu:
 ```shell
-./main
+java -cp ../bin Main
 ```
